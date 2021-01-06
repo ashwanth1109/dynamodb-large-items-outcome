@@ -1,0 +1,134 @@
+<div class="text-center mb-5">
+  <h1>Overcoming Item length limits in AWS DynamoDB</h1>
+  <mat-hint>
+    The maximum item size in DynamoDB is
+    <a
+      href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Limits.html#limits-items"
+      >400 KB</a
+    >, which includes both attribute name binary length (UTF-8 length) and
+    attribute value lengths (again binary length). The attribute name counts
+    towards the size limit.
+  </mat-hint>
+</div>
+
+<form [formGroup]="form" class="mb-5">
+  <div formGroupName="experiment">
+    <mat-label class="d-block">Experiments to include:</mat-label>
+    <mat-checkbox formControlName="split" color="primary">
+      Split into multiple records
+    </mat-checkbox>
+    <mat-checkbox formControlName="compress" color="primary">
+      Compress data
+    </mat-checkbox>
+    <mat-checkbox formControlName="s3" color="primary">
+      Put data to S3
+    </mat-checkbox>
+  </div>
+  <div class="d-flex justify-content-center">
+    <mat-form-field appearance="fill">
+      <mat-label>Initial Item Size <i>(optional)</i></mat-label>
+      <input type="number" matInput formControlName="initialItemSize" />
+      <mat-hint>Default 400KB</mat-hint>
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Increment Value <i>(optional)</i></mat-label>
+      <input type="number" matInput formControlName="incrementSize" />
+      <mat-hint>This is the value incremented by on each iteration</mat-hint>
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Iterator <i>(optional)</i></mat-label>
+      <input type="number" matInput formControlName="iterator" />
+      <mat-hint>This is the number of iterations to run</mat-hint>
+    </mat-form-field>
+    <button
+      mat-raised-button
+      color="primary"
+      class="ml-2 align-self-start btn-experiment"
+      (click)="run()"
+    >
+      Run
+    </button>
+  </div>
+</form>
+
+<div *ngIf="isTableShown(); else noResults">
+  <mat-hint class="performance-info"
+    >Performance of each experiment type is measured in Milliseconds</mat-hint
+  >
+  <div class="d-flex">
+    <table mat-table [dataSource]="iterationList" class="iteration-list w-50">
+      <ng-container matColumnDef="no">
+        <th mat-header-cell *matHeaderCellDef>No.</th>
+        <td mat-cell *matCellDef="let i = index">{{ i }}</td>
+      </ng-container>
+      <ng-container matColumnDef="size">
+        <th mat-header-cell *matHeaderCellDef>Item Size</th>
+        <td mat-cell *matCellDef="let i = index">
+          {{
+            form.get("initialItemSize").value +
+              i * form.get("incrementSize").value
+          }}
+          KB
+        </td>
+      </ng-container>
+      <ng-container *ngIf="experiment.get('split').value" matColumnDef="split">
+        <th mat-header-cell class="text-danger text-center" *matHeaderCellDef>
+          SPLIT
+        </th>
+        <td mat-cell class="text-center" *matCellDef="let element">
+          <div *ngIf="element?.split; else na">
+            <div>{{ element?.split?.duration }} ms</div>
+            <mat-hint>Records: {{ element?.split?.numberOfRecords }}</mat-hint>
+          </div>
+        </td>
+      </ng-container>
+      <ng-container
+        *ngIf="experiment.get('compress').value"
+        matColumnDef="compress"
+      >
+        <th mat-header-cell class="text-danger text-center" *matHeaderCellDef>
+          COMPRESS
+        </th>
+        <td mat-cell class="text-center" *matCellDef="let element">
+          <div *ngIf="element?.compress; else na">
+            <div class="text-warning" *ngIf="element.compress.error">
+              <span
+                [matTooltip]="element.compress.error"
+                matTooltipPosition="after"
+              >
+                Error
+              </span>
+            </div>
+            <div *ngIf="element.compress.duration">
+              {{ element?.compress?.duration }} ms
+            </div>
+            <mat-hint *ngIf="element.compress.size"
+              >Compressed Data: {{ element?.compress?.size }} kb</mat-hint
+            >
+          </div>
+        </td>
+      </ng-container>
+      <ng-container *ngIf="experiment.get('s3').value" matColumnDef="s3">
+        <th mat-header-cell class="text-danger text-center" *matHeaderCellDef>
+          S3
+        </th>
+        <td mat-cell class="text-center" *matCellDef="let element">
+          <div *ngIf="element?.s3; else na">{{ element?.s3?.duration }} ms</div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+    <app-chart
+      [data]="chartData$ | async"
+      [seriesStatus]="chartSeries$ | async"
+    ></app-chart>
+  </div>
+</div>
+<ng-template #noResults>
+  <mat-hint *ngIf="!isLoading" class="text-center d-block mt-5">
+    Please select at least one experiment and EXPERIMENT! :)
+  </mat-hint>
+</ng-template>
+<ng-template #na> N/A </ng-template>

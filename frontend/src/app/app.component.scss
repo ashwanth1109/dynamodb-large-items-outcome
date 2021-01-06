@@ -1,0 +1,29 @@
+:host {
+  padding: 20px;
+  display: block;
+}
+
+.mat-form-field {
+  width: 350px;
+
+  + .mat-form-field {
+    margin-left: 8px;
+  }
+}
+
+.btn-experiment {
+  padding: 12px 16px;
+}
+
+.performance-info {
+  font-size: 14px;
+}
+
+form {
+  width: 820px;
+  margin: 0 auto;
+}
+
+.mat-checkbox + mat-checkbox {
+  margin-left: 20px;
+}

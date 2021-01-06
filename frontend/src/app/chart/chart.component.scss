@@ -1,0 +1,36 @@
+:host {
+  display: block;
+  width: 50%;
+}
+
+highcharts-chart {
+  overflow: visible !important;
+}
+
+::ng-deep {
+  .highcharts-container {
+    font-family: inherit !important;
+    overflow: visible !important;
+
+    svg {
+      font-family: inherit !important;
+      overflow: visible !important;
+    }
+  }
+
+  .highcharts-title, .highcharts-subtitle {
+    text-transform: none !important;
+  }
+
+  .highcharts-background {
+    fill: #303030;
+  }
+
+  .highcharts-credits {
+    display: none;
+  }
+
+  .highcharts-legend-item text {
+    font-weight: normal !important;
+  }
+}
