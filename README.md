@@ -1,0 +1,1 @@
+# dynamodb-large-items-outcome
